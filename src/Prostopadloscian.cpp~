@@ -1,0 +1,230 @@
+#include "Prostopadloscian.hh"
+
+#define DL_DLOZSZEGO_BOKU      25
+#define DL_KROTSZEGO_BOKU      15
+#define DL_POPRZECZNEGO_BOKU   20
+
+using namespace std;
+
+/*!
+ * \file Prostopadloscian.cpp
+ * \brief Definicja metod klasy Prostopadloscian
+ */
+
+/*!
+ * \brief Wyświetla odpowiednie komunikaty w zależności od otrzymanych 
+ *        argumentów.
+ * 
+ * Wyświetla odpowiednie komunikaty w zależności od otrzymanych argumentów.
+ * \param[in] czy_rowne - informacja czy boki są sobie równe,
+ * \param[in] dlugosc - tablica długości boków prostopadłościanu,
+ * \param[in] boki - typ boków prostopadłościanu (krótsze/dłuższe/poprzeczne).
+ *
+ * \pre Parametr dlugosc musi zawierać wcześniej przypisane dane, ktore można 
+ *      wykorzystać w funkcji.
+ * \pre Parametr boki musi zawierać wcześniej przypisane dane, ktore można 
+ *      wykorzystać w funkcji.
+ * \post Wyświetlono komunikaty.
+ */
+void Wyswietl(bool czy_rowne,double dlugosc[], int boki)
+{
+  int indeks=0;
+  const char *TabNapisow[]={
+  "  Dlugosc pierwszego boku: ", "    Dlugosc drugiego boku: ",
+  "   Dlugosc trzeciego boku: ", "   Dlugosc czwartego boku: "};
+  cout << endl;
+  cout << (czy_rowne==1?":)  ":":O  ");
+  cout << (boki==0?"Dluzsze ":(boki==1?"Krotsze ":"Poprzeczne "));
+  cout << (czy_rowne==1?"przeciwlegle boki sa sobie rowne."
+	   :"przeciwlegle boki nie sa rowne!!!") << endl;
+  if(boki==1) indeks+=4;
+  if(boki==2) indeks+=8;
+  cout << setw(16) << fixed << setprecision(20);
+  for(int ind=0;ind<4;ind++)
+    cout << TabNapisow[ind] << dlugosc[indeks++] << endl;
+}
+
+/*!
+ * \brief Oblicza długości boków prostopadłościanu.
+ *
+ * Oblicza długości boków prostopadłościanu.
+ * \param[in] dlugosc - tablica zmiennych reprezentujących długości boków.
+ *
+ * \pre Parametr this musi zawierać wczesniej przypisane dane, ktore mozna 
+ *      wykorzystac do obliczeń.
+ *      Parametr dlugosc musi zawierać wczesniej przypisane dane, ktore mozna 
+ *      wykorzystac do obliczeń.
+ * \post Wyznaczono długości boków.
+ */
+void Prostopadloscian::Oblicz_dlugosc(double dlugosc[]) const
+{
+  for(int indeks=0;indeks<ILOSC_WIERZ/2;indeks++)
+    dlugosc[indeks]=(_TabOryg[2*indeks+1]-_TabOryg[2*indeks]).dlugosc(); 
+ 
+  for(int indeks=ILOSC_WIERZ/2;indeks<ILOSC_WIERZ*3/4;indeks++)
+    dlugosc[indeks]=(_TabOryg[indeks-2]-_TabOryg[indeks-4]).dlugosc();
+
+  for(int indeks=ILOSC_WIERZ*3/4;indeks<ILOSC_WIERZ;indeks++)
+    dlugosc[indeks]=(_TabOryg[indeks]-_TabOryg[indeks-2]).dlugosc();  
+
+  for(int indeks=ILOSC_WIERZ;indeks<ILOSC_WIERZ*5/4;indeks++)
+    dlugosc[indeks]=(_TabOryg[indeks-2]-_TabOryg[indeks-8]).dlugosc();  
+
+  for(int indeks=ILOSC_WIERZ*5/4;indeks<ILOSC_WIERZ*3/2;indeks++)
+    dlugosc[indeks]=(_TabOryg[indeks-6]-_TabOryg[indeks-8]).dlugosc();  
+}
+
+/*!
+ * \brief Wywołuje obliczenie długości boków prostopadłościanu, sprawdza które
+ *        są krótsze, czy są parami równe i wywołuje wyświetlenie 
+ *        odpowiedniego komunikatu.
+ *
+ * Wywołuje obliczenie długości boków prostopadłościanu, sprawdza które są 
+ * krótsze, czy są parami równe i wywołuje wyświetlenie odpowiedniego 
+ * komunikatu.
+ *
+ * \pre Parametr this musi zawierać wczesniej przypisane dane, ktore mozna 
+ *      wykorzystac do obliczeń.
+ * \post Wywołano odpowiednio funkcję Wyswietl.
+ */
+void Prostopadloscian::Oblicz_dlugosc_porownaj_wyswietl() const
+{
+  double dlugosc[ILOSC_WIERZ*3/2];
+  bool czy_rowne[3];
+  
+  this->Oblicz_dlugosc(dlugosc);
+
+  for(int i=0; i<3; ++i)
+    czy_rowne[i] = ((dlugosc[4*i] == dlugosc[4*i+1]) 
+    && (dlugosc[4*i] == dlugosc[4*i+2]) && (dlugosc[4*i] == dlugosc[4*i+3]));
+
+  Wyswietl(czy_rowne[0],dlugosc,0);
+  Wyswietl(czy_rowne[1],dlugosc,1);
+  Wyswietl(czy_rowne[2],dlugosc,2);
+}
+
+/*!
+ * \brief Oblicza współrzędne punktów prostopadłościanu obróconego o podany 
+ *        kąt.
+ *
+ * Oblicza współrzędne punktów prostopadłościanu obróconego o podany kąt.
+ * \param[in] Macierz_obr - macierz obrotu służąca do obrotu figury,
+ * \param[in] liczba_obrotow - informacja ile razy wykonać obrót.
+ * \pre Parametr Macierz_obr musi zawierać wczesniej przypisane dane, ktore 
+ *      mozna wykorzystac do obliczeń.
+ * \post Wykonano obrót. 
+ */
+void Prostopadloscian::Obrot(Macierz3x3 Macierz_obr, int liczba_obrotow)
+{
+  while(liczba_obrotow--)
+    for(int indeks=0;indeks<ILOSC_WIERZ;indeks++)
+      _TabNowe[indeks]=Macierz_obr*_TabOryg[indeks];
+  this->Oblicz_dlugosc_porownaj_wyswietl();
+}
+
+/*!
+ * \brief Oblicza współrzędne punktów prostopadłościanu obróconego o podany
+ *        kąt względem oryginału za pomocą macierzy obrotu.
+ *
+ * Oblicza współrzędne punktów prostopadłościanu obróconego o podany kąt 
+ * względem oryginału za pomocą macierzy obrotu.
+ * \param[in] l_rot - zmienna reprezentująca liczbę rotacji,
+ * \param[in] os - tablica zmiennych reprezentujących osie obrotu,
+ * \param[in] kat_stopnie - tablica zmiennych reprezentujących kąty obrotu w 
+ *                          stopniach,
+ * \param[in] liczba_obrotow - informacja ile razy wykonać obrót.
+ *
+ * \pre brak
+ * \post this musi zawierać adres na stworzony (obrócony) prostopadłościan.
+ */
+Macierz3x3 Prostopadloscian::Obrot_stopnie(int l_rot, char os[], 
+                       double kat_stopnie[], int liczba_obrotow)
+{
+  double                kat_radiany[15];
+  Macierz3x3            Macierz_obr, Macierz_tym[15];
+
+  for(int i=l_rot-1; i>=0;--i)
+    {
+      kat_radiany[i]=kat_stopnie[i]*M_PI/180;  /* przetwarzanie kąta obrotu */
+      Macierz_tym[i](os[i], kat_radiany[i]);
+      /* tworzenie macierzy obrotu */
+      Macierz_obr=Macierz_obr*Macierz_tym[i];
+    }
+  return Macierz_obr;
+}
+
+/*!
+ * \brief Oblicza współrzędne punktów prostopadłościanu przesuniętego o 
+ *        podany wektor.
+ *
+ * Oblicza współrzędne punktów prostopadłościanu przesuniętego o podany 
+ * wektor.
+ * \param[in]
+ *    Przesuniecie - wektor przesunięcia.
+ *
+ * \pre brak
+ * \post this musi zawierać adres na stworzony (przesunięty) prostopadłościan.
+ */
+void Prostopadloscian::Przesun(double droga, double kat_wznoszenia, double kat_skretu)
+{
+  for(int Ind=0;Ind<ILOSC_WIERZ;Ind++)
+    _TabNowe[Ind][0]=_TabOryg[Ind][0]+droga*cos(kat_wznoszenia)*cos(kat_skretu);
+    _TabNowe[Ind][1]=_TabOryg[Ind][1]+droga*cos(kat_wznoszenia)*sin(kat_skretu);
+    _TabNowe[Ind][2]=_TabOryg[Ind][2]+droga*sin(kat_wznoszenia);
+}
+
+/*!
+ * \brief Wprowadza wartości współrzędnych punktów prostopadłościanu.
+ * 
+ * Konstruktor bezparametryczny. Wprowadza wartości współrzędnych punktów 
+ * prostopadłościanu.
+ *   
+ * \pre brak
+ * \post this musi zawierać współrzędne wierzchołków stworzonego 
+ *       prostopadłościanu.
+ */
+Prostopadloscian::Prostopadloscian()
+{
+  for(int wierz=0; wierz<ILOSC_WIERZ;wierz++)
+    {
+       if(wierz%2) 
+         _TabOryg[wierz][0]=_TabNowe[wierz][0]=DL_DLOZSZEGO_BOKU;
+       else
+         _TabOryg[wierz][0]=_TabNowe[wierz][0]=0;
+       if(wierz>=2&&wierz<=5)
+         _TabOryg[wierz][1]=_TabNowe[wierz][1]=DL_KROTSZEGO_BOKU;
+       else
+         _TabOryg[wierz][1]=_TabNowe[wierz][1]=0;
+       if(wierz>=4&&wierz<=7)
+         _TabOryg[wierz][2]=_TabNowe[wierz][2]=DL_POPRZECZNEGO_BOKU;
+       else
+         _TabOryg[wierz][2]=_TabNowe[wierz][2]=0;
+    }
+} 
+
+/*!
+ * \brief Wyświetla współrzędne punktów prostopadłościanu na wyjściu.
+ * 
+ * Wyświetla współrzędne punktów prostopadłościanu na wyjściu.
+ * \param[in] Strm - strumień danych wyjściowych,
+ * \param[in] Pr - obiekt zawierający współrzędne punktów do wyświetlenia na 
+ *                 wyjściu.
+ *   
+ * \pre Parametr Pr musi zawierać wczesniej przypisane dane.
+ * \post Wyświetlono współrzędne punktów prostopadłościanu.
+ * \retval Strm - współrzędne punktów prostopadłościanu jako strumień danych 
+ *                wyjściowych.
+ */ 
+std::ostream& operator << ( std::ostream       &Strm, 
+                            const Prostopadloscian    &Pr
+			    )
+{
+  for(int i=0;i<ILOSC_WIERZ;i++){
+    Strm << Pr(i);
+    if(i%2) Strm << endl;}
+  for(int i=0;i<ILOSC_WIERZ;i++){
+    Strm << Pr[i];
+    if(i%2) Strm << endl;}
+  return Strm;
+}
+

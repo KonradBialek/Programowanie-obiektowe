@@ -1,0 +1,151 @@
+#ifndef SCENA_HH
+#define SCENA_HH
+
+#include <unistd.h>
+#include <list>
+#include <memory>
+#include "Dron.hh"
+#include "PrzeszkodaPr.hh"
+#include "lacze_do_gnuplota.hh"
+
+#define ILOSC_DRONOW 3
+#define ILOSC_PRZESZKODPR 3
+/*!  
+ *  \file Scena.hh
+ *  \brief Definicja klasy Scena
+ *
+ *  Plik zawiera definicję klasy Scena.
+ */
+
+/*!
+ * \brief Klasa Scena modeluje pojęcie sceny.
+ *
+ *  Klasa Scena modeluje pojęcie sceny jako zbioru
+ *  dronów. Pozwala na pobieranie i modyfikowanie pól swoich obiektów oraz
+ *  animowanie ruchu i skalowanie drona.
+ *  Klasa zawiera definicję sceny jako wieloelementowej tablicy, której 
+ *  elementy odpowiedają odpowiednim dronom.
+ *  Metody klasy:
+ *      Dron  operator[] (int Dr) const,
+ *      Dron& operator[] (int Dr),
+ *      void Inicjuj(),
+ *      bool AnimacjaLotu(PzG::LaczeDoGNUPlota & Lacze, double droga,
+ *                               double kat_wzn, double krok_obr,double krok_wir),
+ *      bool AnimacjaObrotu(PzG::LaczeDoGNUPlota & Lacze, char os, 
+ *                      double kat_stopnie, double krok_lotu,double krok_wir),
+ *      void SkalujDrona(PzG::LaczeDoGNUPlota & Lacze, double skala).
+ */
+class Scena{
+  /*! \brief zbiór dronów */
+  std::list<std::shared_ptr<Dron>> _TabDronow;
+  /*! \brief zbiór przeszkód */
+  PrzeszkodaPr _TabPrzeszkod[ILOSC_PRZESZKODPR];
+  public:
+  /*
+   * \brief Realizuje odczyt wartości pola drona sceny o 
+   *        wskazanym indeksie.
+   *
+   * Realizuje odczyt wartości pola drona sceny o wskazanym
+   * indeksie.
+   * \param[in] Dr - indeks wskazujący na pole sceny.
+   * \pre Parametr Dr jest mniejszy od ilości dronów.
+   * \post brak
+   * \retval Kopię wskazywanego pola.
+   */
+ /* inline 
+  std::shared_ptr<Dron>  operator[] (int Dr) const {std::list<std::shared_ptr<Dron>>::const_iterator it;
+  assert(Dr<ILOSC_DRONOW);
+  for(it=_TabDronow.begin(); it!=_TabDronow.end(); ++it,--Dr)
+    if(Dr==0) return *it;}
+*/
+
+  /*
+   * Realizuje zapis wartości do pola drona sceny o wskazanym
+   * indeksie.
+   */
+  std::shared_ptr<Dron>& operator[] (int Dr);
+
+  /*!
+   * \brief Realizuje odczyt wartości pola drona sceny o 
+   *        wskazanym indeksie.
+   *
+   * Realizuje odczyt wartości pola drona sceny o wskazanym
+   * indeksie.
+   * \param[in] Pr - indeks wskazujący na pole sceny.
+   * \pre Parametr Pr jest mniejszy od ilości dronów.
+   * \post brak
+   * \retval Kopię wskazywanego pola.
+   */
+  inline 
+  PrzeszkodaPr  operator() (int Pr) const {assert(0<=Pr&&Pr<ILOSC_PRZESZKODPR);
+                                   return _TabPrzeszkod[Pr];
+                                  } 
+
+  /*!
+   * \brief Realizuje zapis wartości do pola drona sceny o 
+   *        wskazanym indeksie.
+   *
+   * Realizuje zapis wartości do pola drona sceny o wskazanym
+   * indeksie.
+   * \param[in] Pr - indeks wskazujący na pole sceny - dron.
+   * \pre Parametr Pr jest mniejszy od ilości dronów.
+   * \post brak
+   * \retval Referencję do wskazywanego pola.
+   */
+  inline
+  PrzeszkodaPr& operator() (int Pr)       {assert(0<=Pr&&Pr<ILOSC_PRZESZKODPR);
+                                   return _TabPrzeszkod[Pr];
+                                  } 
+
+  /*
+   * Wyswietla współrzędne dronów.
+   */
+  void WyswietlWspolDronow() const;
+
+  /*
+   * Inicjuje budowę dronów i przeszkód.
+   */
+  void Inicjuj();
+
+  /*
+   * Wyświetla drona w kolejnych klatkach lotu.
+   */
+  bool AnimacjaLotu(PzG::LaczeDoGNUPlota & Lacze, double droga, double kat_wzn,
+  double krok_obr,double krok_wir,std::shared_ptr<Dron> dron, int nr_drona);
+
+  /*
+   * Wyświetla drona w kolejnych klatkach obrotu.
+   */
+  bool AnimacjaObrotu(PzG::LaczeDoGNUPlota & Lacze, double kat_stopnie,
+  double krok_lotu,double krok_wir,std::shared_ptr<Dron> dron, int nr_drona);
+
+  /*
+   * \brief Skaluje drona i po wyskalowaniu wyświetla go w progamie gnuplot.
+   *
+   * Skaluje drona i po wyskalowaniu wyświetla go w progamie gnuplot.
+   * \param[in] Lacze - referencja do klasy łączącej program z gnuplotem,
+   * \param[in] skala - zmienna reprezentująca skalę powiększenia lub 
+   *                    pomniejszenia drona.
+   * \pre Parametr Lacze musi się odwoływać do odpowiedniej zmiennej.
+   * \post Wykonano wyskalowanie drona. 
+   */
+/*  inline
+  void SkalujDrona(PzG::LaczeDoGNUPlota &Lacze, double skala, int nr_drona)
+  {_TabDronow[nr_drona].SkalujDrona(skala, nr_drona);
+   Lacze.Rysuj();
+  }*/
+
+  /*
+   * Konstruktor bezparametryczny. Zwiększa wartości zmiennych ilości 
+   * istniejących obiektów sceny i ilości stworzonych obiektów sceny o 1 każdą.
+   */
+  Scena();
+
+  /*
+   * Destruktor bezparametryczny. Zmniejsza wartość zmiennej ilości 
+   * istniejących obiektów sceny o 1.
+   */
+  ~Scena();
+};
+
+#endif

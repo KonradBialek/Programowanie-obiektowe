@@ -1,0 +1,200 @@
+#include "Scena.hh"
+
+using namespace std;
+
+/*!
+ * \file Scena.cpp
+ * \brief Definicja metod klasy Scena
+ */
+
+/*!
+ * \brief Realizuje zapis wartości do pola drona sceny o 
+ *        wskazanym indeksie.
+ *
+ * Realizuje zapis wartości do pola drona sceny o wskazanym
+ * indeksie.
+ * \param[in] Dr - indeks wskazujący na pole sceny - dron.
+ * \pre Parametr Dr jest mniejszy od ilości dronów.
+ * \post brak
+ * \retval Referencję do wskazywanego pola.
+ */
+shared_ptr<Dron>& Scena::operator[] (int Dr)       
+{ 
+  std::list<std::shared_ptr<Dron>>::iterator it;
+  assert(Dr<ILOSC_DRONOW);
+  for(it=_TabDronow.begin(); it!=_TabDronow.end(); ++it, --Dr)
+    if(Dr==0) return *it;
+  return *it;
+} 
+
+/*!
+ * \brief Wyswietla współrzędne dronów.
+ *
+ * Wyswietla współrzędne dronów.
+ *
+ * \pre Istnieje conajmniej jeden dron.
+ * \post Wyswietlono współrzędne dronów.
+ */
+void Scena::WyswietlWspolDronow() const
+{
+  int j=0;
+  list<shared_ptr<Dron>>::const_iterator i;
+  cout << endl;
+  cout << " Spis dronow i ich wspolrzednych (x, y, z):" << endl << endl;
+  cout << "  nr drona |                    wspolrzedne" << endl;
+  cout << " ------------------------------------------------------------" << endl;
+  for(i=_TabDronow.begin(); i!=_TabDronow.end(); ++i,++j)
+  cout << "     " << j+1 << "     |" << (*i)->Wez_Wektor_Pozycji();
+  cout << endl;
+}
+/*!
+ * \brief Animuje lot drona.
+ *
+ * Wyświetla drona w kolejnych klatkach lotu.
+ * \param[in] Lacze - referencja do klasy łączącej program z gnuplotem,
+ * \param[in] droga - zmienna reprezentująca drogę,
+ * \param[in] kat_wzn - zmienna reprezentująca kąt wznoszenia,
+ * \param[in] krok_lotu - zmienna reprezentująca krok lotu drona,
+ * \param[in] krok_wir - zmienna reprezentująca krok obrotu wirnika,
+ * \param[in] dron - zmienna wskaźnikowa wskazująca na wybranego drona,
+ * \param[in] nr_drona - zmienna reprezentująca numer drona.
+ *
+ * \pre Parametr Lacze musi się odwoływać do odpowiedniej zmiennej.
+ * \post Wykonano animację lotu drona.
+ *
+ * \retval true - po wykonaniu animacji.
+ */
+bool Scena::AnimacjaLotu(PzG::LaczeDoGNUPlota& Lacze, double droga,double kat_wzn,
+double krok_lotu,double krok_wir,std::shared_ptr<Dron> dron, int nr_drona)
+{
+  int ilosc_klatek=fabs(droga)/krok_lotu;
+  double resztka=fabs(droga)-ilosc_klatek*krok_lotu;
+  int kier_obr=0;
+  Macierz3x3 Macierz_obr;
+
+  for(int nr_klatki=1; nr_klatki<=ilosc_klatek; ++nr_klatki)
+    {
+      dron->Obrot_wirnikow(0,krok_wir,nr_klatki,kier_obr,Macierz_obr);
+      dron->Przesun(krok_lotu*droga/fabs(droga),kat_wzn);
+      dron->Zapisz(nr_drona);
+      Lacze.Rysuj();
+      usleep(2000000);
+    }
+  if(resztka!=0)
+    {
+      dron->Obrot_wirnikow(0,krok_wir,ilosc_klatek+1,kier_obr,Macierz_obr);
+      dron->Przesun(resztka*droga/fabs(droga), kat_wzn);
+      dron->Zapisz(nr_drona);
+      Lacze.Rysuj();
+      usleep(200000);
+    }
+  return true;
+}
+
+/*!
+ * \brief Animuje obrot drona.
+ *
+ * Wyświetla drona w kolejnych klatkach obrotu.
+ * \param[in] Lacze - referencja do klasy łączącej program z gnuplotem,
+ * \param[in] kat_stopnie - zmienna reprezentująca pełen kąt obrotu,
+ * \param[in] krok_obr - zmienna reprezentująca krok obrotu drona,
+ * \param[in] krok_wir - zmienna reprezentująca krok obrotu wirnika,
+ * \param[in] dron - zmienna wskaźnikowa wskazująca na wybranego drona,
+ * \param[in] nr_drona - zmienna reprezentująca numer drona.
+ *
+ * \pre Parametr Lacze musi się odwoływać do odpowiedniej zmiennej.
+ * \post Wykonano animację obrotu drona.
+ *
+ * \retval true - po wykonaniu animacji.
+ */
+bool Scena::AnimacjaObrotu(PzG::LaczeDoGNUPlota & Lacze, double kat_stopnie,
+double krok_obr,double krok_wir,std::shared_ptr<Dron> dron, int nr_drona)
+{
+  int ilosc_klatek=fabs(kat_stopnie)/krok_obr;
+  double resztka=fabs(kat_stopnie)-ilosc_klatek*krok_obr;
+  int kier_obr=kat_stopnie/fabs(kat_stopnie);
+  Macierz3x3 Macierz_obr;
+
+  for(int nr_klatki=1; nr_klatki<=ilosc_klatek; ++nr_klatki)
+    {
+      Macierz_obr=dron->Obrot_stopnie(krok_obr*kier_obr);
+      dron->Obrot(Macierz_obr);
+      dron->Obrot_wirnikow(1,krok_wir,nr_klatki,kier_obr, Macierz_obr);
+      dron->Zapisz(nr_drona);
+      Lacze.Rysuj();
+      usleep(2000000);
+    }
+  if(resztka!=0)
+    {
+      Macierz_obr=dron->Obrot_stopnie(resztka*kier_obr);
+      dron->Obrot(Macierz_obr);
+      dron->Obrot_wirnikow(1,krok_wir,ilosc_klatek+1,kier_obr, Macierz_obr);
+      dron->Zapisz(nr_drona);
+      Lacze.Rysuj();
+      usleep(200000);
+    }
+  return true;
+}
+
+/*!
+ * \brief Zwiększa wartości zmiennych ilości istniejących obiektów sceny i ilości
+ *        stworzonych obiektów sceny o 1 każdą.
+ * 
+ * Konstruktor bezparametryczny. Zwiększa wartości zmiennych ilości 
+ * istniejących obiektów sceny i ilości stworzonych obiektów sceny o 1 każdą.
+ *   
+ * \pre brak
+ * \post Wartości zmiennych ilości istniejących obiektów sceny i ilości 
+ *         stworzonych obiektów sceny muszą zostać zwiększone o 1.
+ */
+Scena::Scena()
+{
+  for(int i=0; i<ILOSC_DRONOW;++i){
+    shared_ptr<Dron> Dr=make_shared<Dron>();
+    _TabDronow.push_back(Dr);
+  }
+}
+
+/*!
+ * \brief Zmniejsza wartość zmiennej ilości istniejących obiektów sceny o 1.
+ * 
+ * Destruktor bezparametryczny. Zmniejsza wartość zmiennej ilości 
+ * istniejących obiektów sceny o 1.
+ *   
+ * \pre brak
+ * \post Wartość zmiennej ilości istniejących obiektów sceny musi zostać 
+ *       zmniejszona o 1.
+ */
+Scena::~Scena()
+{
+  for(int i=0; i<ILOSC_DRONOW;++i){
+    _TabDronow.pop_back();
+  }
+  cout << endl << "Laczna ilosc stworzonych obiektow klasy Wektor3D: ";
+  cout << Wektor<3>::WezIloscOgolem() << endl;
+  cout << "      Ilosc istniejacych obiektow klasy Wektor3D: ";
+  cout << Wektor<3>::WezIlosc() << endl;
+  cout << endl << "Laczna ilosc stworzonych obiektow sceny: ";
+  cout << ObiektSceny::WezIloscOgolemSc() << endl;
+  cout << "      Ilosc istniejacych obiektow sceny: ";
+  cout << ObiektSceny::WezIloscSc() << endl; 
+}
+
+/*!
+ * \brief Inicjuje budowę dronów i przeszkód.
+ *
+ * Inicjuje budowę dronów i przeszkód.
+ * \pre brak
+ * \post Wykonano inicjację. 
+ */
+void Scena::Inicjuj()
+{ 
+  int j=0;
+  for(std::list<std::shared_ptr<Dron>>::iterator i=_TabDronow.begin(); i!=_TabDronow.end(); ++i, j++){
+   (*i)->Inicjuj(j);
+   (*i)->Zapisz(j);}
+  for(int i=0; i<ILOSC_PRZESZKODPR; i++){
+   _TabPrzeszkod[i].Inicjuj(i);
+   _TabPrzeszkod[i].Zapisz(i);}
+}
+

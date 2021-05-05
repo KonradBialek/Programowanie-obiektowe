@@ -1,0 +1,152 @@
+#ifndef PROSTOPADLOSCIAN_HH
+#define PROSTOPADLOSCIAN_HH
+
+#include "Wektor3D.hh"
+#include "Macierz3x3.hh"
+
+#define ILOSC_WIERZ    8
+
+
+/*!  
+ *  \file Prostopadloscian.hh
+ *  \brief Definicja klasy Prostopadloscian
+ *
+ *  Plik zawiera definicję klasy Prostopadloscian.
+ */
+
+/*!
+ * \brief Klasa Prostopadloscian modeluje pojęcie prostopadłościanu.
+ *
+ *  Klasa Prostopadloscian modeluje pojęcie prostopadłościanu jako zbioru
+ *  ośmiu wierzchołków bryły. Pozwala na przemieszczanie bryły i sprawdzenie 
+ *  czy zachowała kształt. 
+ *  Klasa zawiera definicję bryły jako wieloelementowej tablicy, której 
+ *  elementy odpowiedają elementom bryły.
+ *  Metody klasy:
+ *      Wektor3D operator() (int Wierz) const,
+ *      void Prostopadloscian::Oblicz_dlugosc(double dlugosc[]) const
+ *      void Oblicz_dlugosc_porownaj_wyswietl() const;
+ *      void Obrot(Macierz3x3 Macierz_obr);
+ *      Macierz3x3 Obrot_stopnie(int l_rot,char os[], double kat_stopnie[], 
+ *                                                     int liczba_obrotow);
+ *      void Przesun(Wektor3D Przesuniecie);
+ *      Prostopadloscian();
+ */
+class Prostopadloscian {
+  /*! \brief zbiór oryginalnych wierzchołków bryły */
+  Wektor3D _TabOryg[ILOSC_WIERZ]; 
+  /*! \brief zbiór nowych wierzchołków bryły */
+  Wektor3D _TabNowe[ILOSC_WIERZ]; 
+    /*! \brief zbiór macierzy obrotu, każda dla odpowiedniej bryły */
+  Macierz3x3 Macierz;
+ public:
+  /*!
+   * \brief Realizuje odczyt wektora - pola prostopadłościanu wskazanego przez 
+   *        podaną liczbę.
+   * Realizuje odczyt wektora - pola prostopadłościanu wskazanego przez podaną
+   * liczbę.
+   * \param[in] Wierz - liczba oznaczająca odpowiedni wektor (punkt 
+   *                                                prostopadłościanu).
+   *
+   * \pre Parametr Wierzch musi być mniejszy od ilości wierzchołków.
+   * \post brak
+   *       
+   * \retval _TabOryg[Wierz] - referencja do wektora (punktu 
+   *                             prostopadłościanu) wskazywanego przez liczbę.
+   */
+  Wektor3D operator() (int Wierz) const {assert(0<=Wierz&&Wierz<ILOSC_WIERZ);
+                                         return _TabOryg[Wierz];
+                                        }
+
+  /*!
+   * \brief Realizuje odczyt wektora - pola prostopadłościanu wskazanego przez 
+   *        podaną liczbę.
+   * Realizuje odczyt wektora - pola prostopadłościanu wskazanego przez podaną
+   * liczbę.
+   * \param[in] Wierz - liczba oznaczająca odpowiedni wektor (punkt 
+   *                                                prostopadłościanu).
+   *
+   * \pre Parametr Wierzch musi być mniejszy od ilości wierzchołków.
+   * \post brak
+   *       
+   * \retval _TabOryg[Wierz] - referencja do wektora (punktu 
+   *                             prostopadłościanu) wskazywanego przez liczbę.
+   */
+  Wektor3D operator[] (int Wierz) const {assert(0<=Wierz&&Wierz<ILOSC_WIERZ);
+                                         return _TabNowe[Wierz];
+                                        }
+
+
+  /*!
+   * \brief Realizuje odczyt wartości pola macierzy sceny o wskazanym 
+   *        indeksie.
+   *
+   * Realizuje odczyt wartości pola macierzy sceny o wskazanym indeksie.
+   * \param[in] Mac - indeks wskazujący na pole sceny.
+   * \pre Parametr indeks jest mniejszy od ilości macierzy.
+   * \post brak
+   * \retval Kopię wskazywanego pola.
+   */
+  inline 
+  Macierz3x3  Wez_Macierz() const {return Macierz;}
+
+  /*!
+   * \brief Realizuje zapis wartości do pola macierzy sceny o wskazanym 
+   *        indeksie.
+   *
+   * Realizuje zapis wartości do pola macierzy sceny o wskazanym indeksie.
+   * \param[in] Mac - indeks wskazujący na pole sceny.
+   * \pre Parametr indeks jest mniejszy od ilości macierzy.
+   * \post brak
+   * \retval Referencję do wskazywanego pola.
+   */
+  inline
+  Macierz3x3& Ustaw_Macierz()       {return Macierz;} 
+
+  /*
+   * Oblicza długości boków prostopadłościanu.
+   */
+  void Oblicz_dlugosc(double dlugosc[]) const;
+
+  /*
+   * Oblicza długości boków prostopadłościanu, sprawdza które są krótsze, czy 
+   * są parami równe i wywołuje wyświetlenie odpowiedniego komunikatu.
+   */
+  void Oblicz_dlugosc_porownaj_wyswietl() const;
+
+  /*
+   * Wykonuje pojedynczy obrót bryły zgodnie z otrzymanymi danymi.
+   */
+  void Obrot(Macierz3x3 Macierz_obr, int liczba_obrotow);
+
+  /*
+   * Oblicza współrzędne punktów prostopadłościanu obróconego o podany kąt.
+   */
+  Macierz3x3 Obrot_stopnie(int l_rot,char os[], double kat_stopnie[], 
+                                                  int liczba_obrotow);
+
+  /*
+   * Oblicza współrzędne punktów prostopadłościanu przesuniętego o podany 
+   * wektor.
+   */
+  void Przesun(double droga, double kat_wznoszenia, double kat_skretu)
+  /*
+   * Wprowadza wartości współrzędnych punktów prostopadłościanu.
+   */
+  Prostopadloscian();
+};
+
+/*
+ * Wyświetla odpowiednie komunikaty w zależności od otrzymanych argumentów.
+ */
+void Wyswietl(bool czy_rowne, double dlugosc[], int boki);
+
+/*
+ * Wyświetla współrzędne punktów prostopadłościanu na wyjściu.
+ */
+std::ostream& operator << ( std::ostream       &Strm, 
+                            const Prostopadloscian    &Pr
+			    );
+
+#endif
+
